@@ -1,9 +1,23 @@
 #include <DHT.h>
+#include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 
 #define dhtpin 4
 #define dhtype DHT11
 DHT dht(dhtpin, dhtype);
+
+#define keyrows 4
+#define keycols 4
+const char keys[keyrows][keycols] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'#','0','*','D'}
+};
+
+const byte colpins[keycols] = {27, 23, 14, 19};
+const byte rowpins[keyrows] = {32, 33, 25, 26};
+Keypad kp = Keypad(makeKeymap(keys), rowspins, colspins, keyrows, keycols);
 
 #define lcdcol 16
 #define lcdrow 2
