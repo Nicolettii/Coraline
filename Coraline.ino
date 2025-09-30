@@ -32,8 +32,6 @@ Keypad kp = Keypad(makeKeymap(keys), rowspins, colspins, keyrows, keycols);
 #define addr 0x27
 LiquidCrystal_I2C lcd(addr, lcdcol, lcdrow);
 
-
-
 struct sensors {
   String type;
   float (*read)();
@@ -138,7 +136,7 @@ void wifimsg() {
     lcd.setCursor(0, 0);
     lcd.print("Wifi ok!");
     delay(1000);
-    readth();
+    serversend();
   } else {
     lcd.print("Wifi failed.");
   }
