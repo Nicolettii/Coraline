@@ -1,10 +1,14 @@
 #include <DHT.h>
+#include <WiFi.h>
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 
 #define dhtpin 4
 #define dhtype DHT11
 DHT dht(dhtpin, dhtype);
+
+#define ssid "Home" 
+#define pswd "MN141201"
 
 #define keyrows 4
 #define keycols 4
@@ -54,10 +58,33 @@ void wifimsg() {
 void wificonnect() {
   lcd.clear();
   lcd.setCursor(0, 0); 
-  lcd.print("heyo");
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid,pswd);
+  while(WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    lcd.print("wait.");
+    delay(1000);
+    lcd.setCursor(0,0);
+    lcd.print("wait..");
+    delay(1000);
+    lcd.setCursor(0,0);
+    lcd.print("wait...");
+    delay(1000);
+  }
+
+  if(WiFi.status() == WL_CONNECTED) {
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Wifi ok!");
+    }
+  else {
+    lcd.print("Wifi failed.");
+    }
+  
+  
 }
 
-void read() {
+void readth() {
 delay(2000);
 float temp = dht.readTemperature();
 float humi = dht.readHumidity();
