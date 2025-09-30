@@ -8,6 +8,8 @@ DHT dht(dhtpin, dhtype);
 
 #define keyrows 4
 #define keycols 4
+byte colspins[keycols] = {27, 23, 14, 19};
+byte rowspins[keyrows] = {32, 33, 25, 26};
 const char keys[keyrows][keycols] = {
   {'1','2','3','A'},
   {'4','5','6','B'},
@@ -15,8 +17,6 @@ const char keys[keyrows][keycols] = {
   {'#','0','*','D'}
 };
 
-byte colspins[keycols] = {27, 23, 14, 19};
-byte rowspins[keyrows] = {32, 33, 25, 26};
 Keypad kp = Keypad(makeKeymap(keys), rowspins, colspins, keyrows, keycols);
 
 #define lcdcol 16
@@ -30,17 +30,31 @@ dht.begin();
 lcd.init();
 lcd.clear();
 lcd.backlight();
+wifimsg();
 }
 
 void loop() {
-keytest();
+keyinput();
 }
 
-void keytest() {
+void keyinput() {
   char input = kp.getKey();
   if (input == '1') {
-    read();
+    wificonnect();
   }
+}
+
+void wifimsg() {
+  lcd.setCursor(0,0); 
+  lcd.print("Press 1 to conn-");
+  lcd.setCursor(0,1);
+  lcd.print("ect into WiFi!");
+}
+
+void wificonnect() {
+  lcd.clear();
+  lcd.setCursor(0, 0); 
+  lcd.print("heyo");
 }
 
 void read() {
