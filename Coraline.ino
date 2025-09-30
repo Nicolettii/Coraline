@@ -1,6 +1,8 @@
 #include <DHT.h>
+#include <Time.h>
 #include <WiFi.h>
 #include <Keypad.h>
+#include <HTTPClient.h>
 #include <LiquidCrystal_I2C.h>
 
 #define dhtpin 4
@@ -9,6 +11,8 @@ DHT dht(dhtpin, dhtype);
 
 #define ssid "Home"
 #define pswd "MN141201"
+#define apikey "Projeto1MC"
+#define server "https://tcc2025-473213.rj.r.appspot.com/api/leituras/"
 
 #define keyrows 4
 #define keycols 4
@@ -27,6 +31,30 @@ Keypad kp = Keypad(makeKeymap(keys), rowspins, colspins, keyrows, keycols);
 #define lcdrow 2
 #define addr 0x27
 LiquidCrystal_I2C lcd(addr, lcdcol, lcdrow);
+
+
+
+struct sensors {
+  String type;
+  float (*read)();
+};
+
+float readtemp() {
+  delay(2000);
+  return dht.readTemperature();
+}
+
+float readhumi() {
+  delay(2000);
+  return dht.readHumidity();
+}
+
+sensors sensorslist[] = {
+  { "Temperatura", readtemp },
+  { "Umidade", readhumi }
+};
+
+const int totalSensors = sizeof(sensorslist) / sizeof(sensorslist[0]);
 
 void setup() {
   Serial.begin(115200);
@@ -53,6 +81,7 @@ void indexmsg() {
   lcd.print("Press 1 to conn-");
   lcd.setCursor(0, 1);
   lcd.print("ect into WiFi!");
+  keyinput();
 }
 
 void wificonnect() {
@@ -61,6 +90,32 @@ void wificonnect() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pswd);
   wifimsg();
+}
+
+void serversend() {
+  HTTPClient http;
+  http.begin(server);
+
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http.addHeader("X-API-KEY", apikey);
+
+  String postData =
+    "data=" + String(ymd) + "&time=" + String(hms) + "&totalSensors=" + String(totalSensors);
+
+  for (int i = 0; i < totalSensors; i++) {
+    float reading = sensorslist[i].read();
+    postData += "&sensor" + String(i + 1) + "=" + sensorslist[i].type;
+    postData += "&value" + String(i + 1) + "=" + String(reading, 2);
+  }
+
+  int responseCode = http.POST(postData);
+  Serial.println("POST Data: " + postData);
+  Serial.println("HTTP Response: " + String(responseCode));
+
+  if (responseCode > 0) {
+    String responseBody = http.getString();
+    Serial.println("Server Response: " + responseBody);
+  }
 }
 
 void wifimsg() {
@@ -89,19 +144,29 @@ void wifimsg() {
   }
 }
 
+void getime() {
+  char ymd[11];
+  char hms[9];
+  configTime(-3 * 3600, 0, "pool.ntp.org");
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+  localtime_r(&now, &timeinfo);
+
+  strftime(ymd, sizeof(ymd), "%Y-%m-%d", &timeinfo);
+  strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
+}
+
 void readth() {
   lcd.clear();
-  delay(1000);
-  float temp = dht.readTemperature();
-  float humi = dht.readHumidity();
   lcd.setCursor(0, 0);
   lcd.print("T:");
-  lcd.print(temp);
+  lcd.print(readtemp());
   lcd.print((char)223);
   lcd.print("C");
 
   lcd.setCursor(0, 1);
   lcd.print("U:");
-  lcd.print(humi);
+  lcd.print(readhumi());
   lcd.print("%");
 }
