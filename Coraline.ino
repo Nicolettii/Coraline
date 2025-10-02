@@ -1,6 +1,8 @@
 #include <DHT.h>
 #include <Time.h>
 #include <WiFi.h>
+#include <Chrono.h>
+#include <Thread.h>
 #include <Keypad.h>
 #include <HTTPClient.h>
 #include <LiquidCrystal_I2C.h>
