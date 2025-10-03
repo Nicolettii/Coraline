@@ -1,8 +1,6 @@
 #include <DHT.h>
 #include <Time.h>
 #include <WiFi.h>
-#include <Chrono.h>
-#include <Thread.h>
 #include <Keypad.h>
 #include <HTTPClient.h>
 #include <LiquidCrystal_I2C.h>
@@ -14,7 +12,7 @@ DHT dht(dhtpin, dhtype);
 #define ssid "Home"
 #define pswd "MN141201"
 #define apikey "Projeto1MC"
-#define server "https://tcc2025-473213.rj.r.appspot.com/api/leituras/"
+#define server "http://tcc2025-473213.rj.r.appspot.com/api/leituras/"
 
 #define keyrows 4
 #define keycols 4
@@ -56,6 +54,9 @@ sensors sensorslist[] = {
 
 const int totalSensors = sizeof(sensorslist) / sizeof(sensorslist[0]);
 
+char ymd[11];
+  char hms[9];
+
 void setup() {
   Serial.begin(115200);
   dht.begin();
@@ -93,9 +94,9 @@ void wificonnect() {
 }
 
 void serversend() {
+  getime();
   HTTPClient http;
   http.begin(server);
-
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   http.addHeader("X-API-KEY", apikey);
 
@@ -145,8 +146,7 @@ void wifimsg() {
 }
 
 void getime() {
-  char ymd[11];
-  char hms[9];
+  
   configTime(-3 * 3600, 0, "pool.ntp.org");
   time_t now;
   struct tm timeinfo;
