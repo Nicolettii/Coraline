@@ -5,19 +5,19 @@
 #include <HTTPClient.h>
 #include <LiquidCrystal_I2C.h>
 
-#define dhtpin 4
-#define dhtype DHT11
-DHT dht(dhtpin, dhtype);
+#define dhtpin 4 //mudar define?
+#define dhttype DHT11 //mudar define?
+DHT dht(dhtpin, dhttype);
 
-#define ssid "Home"
-#define pswd "MN141201"
-#define apikey "Projeto1MC"
-#define server "http://tcc2025-473213.rj.r.appspot.com/api/leituras/"
+const char* ssid = "Home";
+const char* password = "MN141201";
+const char* apikey = "Projeto1MC";
+const char* server = "http://tcc2025-473213.rj.r.appspot.com/api/leituras/";
 
-#define keyrows 4
-#define keycols 4
-byte colspins[keycols] = { 27, 23, 14, 19 };
-byte rowspins[keyrows] = { 32, 33, 25, 26 };
+const int keyrows = 4;
+const int keycols = 4;
+const byte colpins[keycols] = { 27, 23, 14, 19 };
+const byte rowpins[keyrows] = { 32, 33, 25, 26 };
 const char keys[keyrows][keycols] = {
   { '1', '2', '3', 'A' },
   { '4', '5', '6', 'B' },
@@ -27,10 +27,10 @@ const char keys[keyrows][keycols] = {
 
 Keypad kp = Keypad(makeKeymap(keys), rowspins, colspins, keyrows, keycols);
 
-#define lcdcol 16
-#define lcdrow 2
-#define addr 0x27
-LiquidCrystal_I2C lcd(addr, lcdcol, lcdrow);
+const int lcdcols = 16;
+const int lcdrows = 2;
+const int lcdaddr = 0x27;
+LiquidCrystal_I2C lcd(lcdaddr, lcdcols, lcdrows);
 
 struct sensors {
   String type;
