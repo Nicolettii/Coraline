@@ -43,7 +43,7 @@ float readtemp() {
   if (isnan(temp)) {
     temp = 999;
   }
-  return;
+  return temp;
 }
 
 float readhumi() {
@@ -52,7 +52,7 @@ float readhumi() {
   if (isnan(humi)) {
     humi = 999;
   }
-  return;
+  return humi;
 }
 
 sensors sensorslist[] = {
