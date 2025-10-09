@@ -1,7 +1,5 @@
 #include <DHT.h>
 #include <WiFi.h>
-#include <Chrono.h>
-#include <thread.h>
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 
