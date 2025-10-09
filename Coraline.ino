@@ -5,8 +5,8 @@
 #include <HTTPClient.h>
 #include <LiquidCrystal_I2C.h>
 
-#define dhtpin 4 //mudar define?
-#define dhttype DHT11 //mudar define?
+#define dhtpin 4       //mudar define?
+#define dhttype DHT11  //mudar define?
 DHT dht(dhtpin, dhttype);
 
 const char* ssid = "Home";
@@ -39,12 +39,20 @@ struct sensors {
 
 float readtemp() {
   delay(2000);
-  return dht.readTemperature();
+  float temp = dht.readTemperature();
+  if (isnan(temp)) {
+    temp = 999;
+  }
+  return temp;
 }
 
 float readhumi() {
   delay(2000);
-  return dht.readHumidity();
+  float humi = dht.readHumidity();
+  if (isnan(humi)) {
+    humi = 999;
+  }
+  return humi;
 }
 
 sensors sensorslist[] = {
@@ -55,7 +63,7 @@ sensors sensorslist[] = {
 const int totalSensors = sizeof(sensorslist) / sizeof(sensorslist[0]);
 
 char ymd[11];
-  char hms[9];
+char hms[9];
 
 void setup() {
   Serial.begin(115200);
@@ -146,7 +154,7 @@ void wifimsg() {
 }
 
 void getime() {
-  
+
   configTime(-3 * 3600, 0, "pool.ntp.org");
   time_t now;
   struct tm timeinfo;
