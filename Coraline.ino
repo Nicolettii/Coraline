@@ -37,7 +37,6 @@ struct sensors {
 };
 
 float readtemp() {
-  delay(2000);
   float temp = dht.readTemperature();
   if (isnan(temp)) {
     temp = -999;
@@ -46,7 +45,6 @@ float readtemp() {
 }
 
 float readhumi() {
-  delay(2000);
   float humi = dht.readHumidity();
   if (isnan(humi)) {
     humi = -999;
@@ -64,8 +62,10 @@ const int totalSensors = sizeof(sensorslist) / sizeof(sensorslist[0]);
 char dmy[11];
 char hms[9];
 
+unsigned long lastpost = 0;
+unsigned long interval = 60000; 
 
-enum state : unsigned char {boot, wifi, httpost, readth};
+enum state : unsigned char { boot, wifi, httpost, readth };
 state currentstate = boot;
 
 void setup() {
@@ -77,21 +77,27 @@ void setup() {
 }
 
 void loop() {
-  switch(currentstate){
-  case boot :
-   bootsta();
-   break;
-  case wifi :
-   wifista();
-   break;
-  case httpost : 
-  httpsta();
-  break;
-  case readth : 
-  readthsta();
-  break;
-}
-}
+  switch (currentstate) {
+    case boot:
+      bootsta();
+      break;
+    case wifi:
+      wifista();
+      break;
+    case httpost:
+      httpsta();
+      break;
+    case readth:
+      readthsta();
+      break;
+    }
+      unsigned long now = millis();
+    if (currentstate == readth && (now - lastpost >= interval)) {
+      currentstate = httpost;
+      lastpost = now;
+    }
+  }
+
 
 void bootsta() {
   lcd.setCursor(0, 0);
@@ -118,8 +124,8 @@ void wifista() {
     lcd.setCursor(0, 0);
     lcd.print("wait...");
     delay(1000);
-    attempt++;   
-  } 
+    attempt++;
+  }
   if (WiFi.status() == WL_CONNECTED) {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -152,12 +158,12 @@ void httpsta() {
   int responseCode = http.POST(postData);
   Serial.println("POST Data: " + postData);
   Serial.println("HTTP Response: " + String(responseCode));
-  
+
   String responseBody = http.getString();
   Serial.println("Server Response: " + responseBody);
 
   if (responseCode == 200) {
-  readthsta();
+    currentstate = readth;
   }
 }
 
@@ -172,7 +178,6 @@ void timeconfig() {
   strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
 }
 
-  
 void readthsta() {
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -180,9 +185,9 @@ void readthsta() {
   lcd.print(readtemp());
   lcd.print((char)223);
   lcd.print("C");
-
   lcd.setCursor(0, 1);
   lcd.print("U:");
   lcd.print(readhumi());
   lcd.print("%");
+  delay(4000);
 }
