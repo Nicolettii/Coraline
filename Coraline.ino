@@ -62,7 +62,7 @@ char dmy[11];
 char hms[9];
 
 unsigned long lastpost = 0;
-unsigned long interval = 60000; 
+unsigned long interval = 60000;
 
 enum state : unsigned char { boot, wifi, httpost, readth, error };
 state currentstate = boot;
@@ -92,13 +92,13 @@ void loop() {
     case error:
       errmsg();
       break;
-    }
-    unsigned long now = millis();
-    if (currentstate == readth && (now - lastpost >= interval)) {
-      currentstate = httpost;
-      lastpost = now;
-    }
   }
+  unsigned long now = millis();
+  if (currentstate == readth && (now - lastpost >= interval)) {
+    currentstate = httpost;
+    lastpost = now;
+  }
+}
 
 
 void opmsg() {
@@ -120,7 +120,7 @@ void wifista() {
   while (WiFi.status() != WL_CONNECTED && attempt < 5) {
     delay(1000);
     lcd.clear();
-    lcd.setCursor(0,0);
+    lcd.setCursor(0, 0);
     lcd.print("Wait.");
     delay(1000);
     lcd.setCursor(0, 0);
@@ -177,13 +177,20 @@ void httpsta() {
 
 void timeconfig() {
   configTime(-6 * 3600, 0, "pool.ntp.org");
-  time_t now;
   struct tm timeinfo;
-  time(&now);
-  localtime_r(&now, &timeinfo);
-
-  strftime(dmy, sizeof(dmy), "%d-%m-%Y", &timeinfo);
-  strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
+  int attempt = 0;
+  while (!getLocalTime(&timeinfo) && attempt < 10) {
+    delay(1000);
+    attempt++;
+  }
+  if (attempt > 10) {
+    strcpy(dmy, "00-00-0000");
+    strcpy(hms, "00:00:00");
+    return;
+  } else {
+    strftime(dmy, sizeof(dmy), "%d-%m-%Y", &timeinfo);
+    strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
+  }
 }
 
 void readthsta() {
@@ -201,15 +208,15 @@ void readthsta() {
 }
 
 void errmsg() {
-  lcd.setCursor(0,0);
+  lcd.setCursor(0, 0);
   lcd.print("Something went w");
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   lcd.print("rong.");
   delay(2000);
   lcd.clear();
-  lcd.setCursor(0,0);
+  lcd.setCursor(0, 0);
   lcd.print("Returning to the");
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   lcd.print("boot screen");
   delay(2000);
   lcd.clear();
