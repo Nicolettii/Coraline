@@ -64,7 +64,7 @@ char hms[9];
 unsigned long lastpost = 0;
 unsigned long interval = 60000; 
 
-enum state : unsigned char { boot, wifi, httpost, readth };
+enum state : unsigned char { boot, wifi, httpost, readth, error };
 state currentstate = boot;
 
 void setup() {
@@ -78,7 +78,7 @@ void setup() {
 void loop() {
   switch (currentstate) {
     case boot:
-      bootsta();
+      opmsg();
       break;
     case wifi:
       wifista();
@@ -89,6 +89,9 @@ void loop() {
     case readth:
       readthsta();
       break;
+    case error:
+      errmsg();
+      break;
     }
     unsigned long now = millis();
     if (currentstate == readth && (now - lastpost >= interval)) {
@@ -98,11 +101,11 @@ void loop() {
   }
 
 
-void bootsta() {
+void opmsg() {
   lcd.setCursor(0, 0);
-  lcd.print("Press 1 to conn-");
+  lcd.print("Press 1 to conne");
   lcd.setCursor(0, 1);
-  lcd.print("ect into WiFi!");
+  lcd.print("ct into WiFi!");
   char input = kp.getKey();
   if (input == '1') {
     lcd.clear();
@@ -115,15 +118,16 @@ void wifista() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pswd);
   while (WiFi.status() != WL_CONNECTED && attempt < 5) {
+    delay(1000);
+    lcd.clear();
     lcd.setCursor(0,0);
-    delay(1000);
-    lcd.print("wait.");
-    delay(1000);
-    lcd.setCursor(0, 0);
-    lcd.print("wait..");
+    lcd.print("Wait.");
     delay(1000);
     lcd.setCursor(0, 0);
-    lcd.print("wait...");
+    lcd.print("Wait..");
+    delay(1000);
+    lcd.setCursor(0, 0);
+    lcd.print("Wait...");
     attempt++;
   }
   if (WiFi.status() == WL_CONNECTED) {
@@ -136,7 +140,7 @@ void wifista() {
     lcd.clear();
     lcd.print("Wifi failed.");
     delay(1000);
-    currentstate = boot;
+    currentstate = error;
   }
 }
 
@@ -166,7 +170,8 @@ void httpsta() {
   if (responseCode == 200) {
     currentstate = readth;
   } else {
-    currentstate = boot;
+    delay(1000);
+    currentstate = error;
   }
 }
 
@@ -193,4 +198,20 @@ void readthsta() {
   lcd.print(readhumi());
   lcd.print("%");
   delay(3000);
+}
+
+void errmsg() {
+  lcd.setCursor(0,0);
+  lcd.print("Something went w");
+  lcd.setCursor(0,1);
+  lcd.print("rong.");
+  delay(2000);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Returning to the");
+  lcd.setCursor(0,1);
+  lcd.print("boot screen");
+  delay(2000);
+  lcd.clear();
+  currentstate = boot;
 }
