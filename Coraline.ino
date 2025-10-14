@@ -4,8 +4,8 @@
 #include <HTTPClient.h>
 #include <LiquidCrystal_I2C.h>
 
-#define dhtpin 4       //mudar define?
-#define dhttype DHT11  //mudar define?
+const int dhtpin = 4;
+const auto dhttype = DHT11;
 DHT dht(dhtpin, dhttype);
 
 const char* ssid = "Home";
@@ -87,16 +87,11 @@ void loop() {
       httpsta();
       break;
     case readth:
-      readthsta();
-      break;
+		readthsta();
+		break;
     case error:
       errmsg();
       break;
-  }
-  unsigned long now = millis();
-  if (currentstate == readth && (now - lastpost >= interval)) {
-    currentstate = httpost;
-    lastpost = now;
   }
 }
 
@@ -194,6 +189,13 @@ void timeconfig() {
 }
 
 void readthsta() {
+	unsigned long now = millis();
+	if (now - lastpost >= interval) {
+		currentstate = httpost;
+		lastpost = now;
+		return;
+	}
+	
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("T:");
