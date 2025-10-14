@@ -23,7 +23,6 @@ const char keys[keyrows][keycols] = {
   { '7', '8', '9', 'C' },
   { '#', '0', '*', 'D' }
 };
-
 Keypad kp = Keypad(makeKeymap(keys), rowpins, colpins, keyrows, keycols);
 
 const int lcdcols = 16;
@@ -91,7 +90,7 @@ void loop() {
       readthsta();
       break;
     }
-      unsigned long now = millis();
+    unsigned long now = millis();
     if (currentstate == readth && (now - lastpost >= interval)) {
       currentstate = httpost;
       lastpost = now;
@@ -106,6 +105,7 @@ void bootsta() {
   lcd.print("ect into WiFi!");
   char input = kp.getKey();
   if (input == '1') {
+    lcd.clear();
     currentstate = wifi;
   }
 }
@@ -115,6 +115,7 @@ void wifista() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pswd);
   while (WiFi.status() != WL_CONNECTED && attempt < 5) {
+    lcd.setCursor(0,0);
     delay(1000);
     lcd.print("wait.");
     delay(1000);
@@ -123,7 +124,6 @@ void wifista() {
     delay(1000);
     lcd.setCursor(0, 0);
     lcd.print("wait...");
-    delay(1000);
     attempt++;
   }
   if (WiFi.status() == WL_CONNECTED) {
@@ -133,6 +133,7 @@ void wifista() {
     delay(1000);
     currentstate = httpost;
   } else {
+    lcd.clear();
     lcd.print("Wifi failed.");
     delay(1000);
     currentstate = boot;
@@ -164,17 +165,19 @@ void httpsta() {
 
   if (responseCode == 200) {
     currentstate = readth;
+  } else {
+    currentstate = boot;
   }
 }
 
 void timeconfig() {
-  configTime(-3 * 3600, 0, "pool.ntp.org");
+  configTime(-6 * 3600, 0, "pool.ntp.org");
   time_t now;
   struct tm timeinfo;
   time(&now);
   localtime_r(&now, &timeinfo);
 
-  strftime(dmy, sizeof(dmy), "%Y-%m-%d", &timeinfo);
+  strftime(dmy, sizeof(dmy), "%d-%m-%Y", &timeinfo);
   strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
 }
 
@@ -189,5 +192,5 @@ void readthsta() {
   lcd.print("U:");
   lcd.print(readhumi());
   lcd.print("%");
-  delay(4000);
+  delay(3000);
 }
