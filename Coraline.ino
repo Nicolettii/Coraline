@@ -84,17 +84,16 @@ void loop() {
       wifista();
       break;
     case httpost:
-      httpsta();
+      httpost();
       break;
     case readth:
-		readthsta();
-		break;
+		  readth();
+		  break;
     case error:
       errmsg();
       break;
   }
 }
-
 
 void opmsg() {
   lcd.setCursor(0, 0);
@@ -112,19 +111,7 @@ void wifista() {
   int attempt = 0;
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pswd);
-  while (WiFi.status() != WL_CONNECTED && attempt < 5) {
-    delay(1000);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Wait.");
-    delay(1000);
-    lcd.setCursor(0, 0);
-    lcd.print("Wait..");
-    delay(1000);
-    lcd.setCursor(0, 0);
-    lcd.print("Wait...");
-    attempt++;
-  }
+  wifimsg();
   if (WiFi.status() == WL_CONNECTED) {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -139,7 +126,23 @@ void wifista() {
   }
 }
 
-void httpsta() {
+void wifimsg() {
+  while (WiFi.status() != WL_CONNECTED && attempt < 5) {
+    delay(1000);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Wait.");
+    delay(1000);
+    lcd.setCursor(0, 0);
+    lcd.print("Wait..");
+    delay(1000);
+    lcd.setCursor(0, 0);
+    lcd.print("Wait...");
+    attempt++;
+  }
+}
+
+void httpost() {
   timeconfig();
   HTTPClient http;
   http.begin(server);
@@ -188,7 +191,7 @@ void timeconfig() {
   }
 }
 
-void readthsta() {
+void readth() {
 	unsigned long now = millis();
 	if (now - lastpost >= interval) {
 		currentstate = httpost;
