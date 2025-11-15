@@ -1,31 +1,30 @@
 #include <DHT.h>
-#include <Time.h>
 #include <WiFi.h>
+#include <time.h> 
 #include <Keypad.h>
 #include <HTTPClient.h>
 #include <LiquidCrystal_I2C.h>
 
-#define dhtpin 4       //mudar define?
-#define dhttype DHT11  //mudar define?
+const int dhtpin = 4;
+const auto dhttype = DHT11;
 DHT dht(dhtpin, dhttype);
 
-const char* ssid = "Home";
-const char* password = "MN141201";
+const char* ssid = "iPhone de Thiago";
+const char* pswd = "nicoletti";
 const char* apikey = "Projeto1MC";
 const char* server = "http://tcc2025-473213.rj.r.appspot.com/api/leituras/";
 
 const int keyrows = 4;
 const int keycols = 4;
-const byte colpins[keycols] = { 27, 23, 14, 19 };
-const byte rowpins[keyrows] = { 32, 33, 25, 26 };
+byte colpins[keycols] = { 27, 23, 14, 19 };
+byte rowpins[keyrows] = { 32, 33, 25, 26 };
 const char keys[keyrows][keycols] = {
   { '1', '2', '3', 'A' },
   { '4', '5', '6', 'B' },
   { '7', '8', '9', 'C' },
   { '#', '0', '*', 'D' }
 };
-
-Keypad kp = Keypad(makeKeymap(keys), rowspins, colspins, keyrows, keycols);
+Keypad kp = Keypad(makeKeymap(keys), rowpins, colpins, keyrows, keycols);
 
 const int lcdcols = 16;
 const int lcdrows = 2;
@@ -38,19 +37,17 @@ struct sensors {
 };
 
 float readtemp() {
-  delay(2000);
   float temp = dht.readTemperature();
   if (isnan(temp)) {
-    temp = 999;
+    temp = -999;
   }
   return temp;
 }
 
 float readhumi() {
-  delay(2000);
   float humi = dht.readHumidity();
   if (isnan(humi)) {
-    humi = 999;
+    humi = -999;
   }
   return humi;
 }
@@ -62,8 +59,14 @@ sensors sensorslist[] = {
 
 const int totalSensors = sizeof(sensorslist) / sizeof(sensorslist[0]);
 
-char ymd[11];
+char dmy[11];
 char hms[9];
+
+unsigned long lastpost = 0;
+unsigned long interval = 30000;
+
+enum state : unsigned char { boot, wifi, httpost, readth, error };
+state currentstate = boot;
 
 void setup() {
   Serial.begin(115200);
@@ -71,45 +74,80 @@ void setup() {
   lcd.init();
   lcd.clear();
   lcd.backlight();
-  indexmsg();
 }
 
 void loop() {
-  keyinput();
-}
-
-void keyinput() {
-  char input = kp.getKey();
-  if (input == '1') {
-    wificonnect();
+  switch (currentstate) {
+    case boot:
+      bootsta();
+      break;
+    case wifi:
+      wifista();
+      break;
+    case httpost:
+      httpoststa();
+      break;
+    case readth:
+		  readthsta();
+		  break;
+    case error:
+      errorsta();
+      break;
   }
 }
 
-void indexmsg() {
+void bootsta() {
   lcd.setCursor(0, 0);
-  lcd.print("Press 1 to conn-");
+  lcd.print("Press 1 to conne");
   lcd.setCursor(0, 1);
-  lcd.print("ect into WiFi!");
-  keyinput();
+  lcd.print("ct into WiFi!");
+  char input = kp.getKey();
+  if (input == '1') {
+    lcd.clear();
+    currentstate = wifi;
+  }
 }
 
-void wificonnect() {
-  lcd.clear();
-  lcd.setCursor(0, 0);
+void wifista() {
+  int attempt = 0;
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pswd);
-  wifimsg();
+  while (WiFi.status() != WL_CONNECTED && attempt < 5) {
+    delay(1000);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Wait.");
+    delay(1000);
+    lcd.setCursor(0, 0);
+    lcd.print("Wait..");
+    delay(1000);
+    lcd.setCursor(0, 0);
+    lcd.print("Wait...");
+    attempt++;
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Wifi ok!");
+    delay(1000);
+    currentstate = httpost;
+  } else {
+    lcd.clear();
+    lcd.print("Wifi failed.");
+    delay(1000);
+    currentstate = error;
+  }
 }
 
-void serversend() {
-  getime();
+void httpoststa() {
+  timeconfig();
   HTTPClient http;
   http.begin(server);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   http.addHeader("X-API-KEY", apikey);
 
   String postData =
-    "data=" + String(ymd) + "&time=" + String(hms) + "&totalSensors=" + String(totalSensors);
+    "data=" + String(dmy) + "&time=" + String(hms) + "&totalSensors=" + String(totalSensors);
 
   for (int i = 0; i < totalSensors; i++) {
     float reading = sensorslist[i].read();
@@ -121,60 +159,68 @@ void serversend() {
   Serial.println("POST Data: " + postData);
   Serial.println("HTTP Response: " + String(responseCode));
 
-  if (responseCode > 0) {
-    String responseBody = http.getString();
-    Serial.println("Server Response: " + responseBody);
+  String responseBody = http.getString();
+  Serial.println("Server Response: " + responseBody);
+
+  if (responseCode == 200) {
+    currentstate = readth;
+  } else {
+    delay(1000);
+    currentstate = error;
   }
 }
 
-void wifimsg() {
+void timeconfig() {
+  configTime(-6 * 3600, 0, "pool.ntp.org");
+  struct tm timeinfo;
   int attempt = 0;
-  while (WiFi.status() != WL_CONNECTED && attempt < 5) {
-    delay(1000);
-    lcd.print("wait.");
-    delay(1000);
-    lcd.setCursor(0, 0);
-    lcd.print("wait..");
-    delay(1000);
-    lcd.setCursor(0, 0);
-    lcd.print("wait...");
+  while (!getLocalTime(&timeinfo) && attempt < 10) {
     delay(1000);
     attempt++;
   }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Wifi ok!");
-    delay(1000);
-    serversend();
+  if (attempt > 10) {
+    strcpy(dmy, "0000-00-00");
+    strcpy(hms, "00:00:00");
+    return;
   } else {
-    lcd.print("Wifi failed.");
+    strftime(dmy, sizeof(dmy), "%Y-%m-%d", &timeinfo);
+    strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
   }
 }
 
-void getime() {
-
-  configTime(-3 * 3600, 0, "pool.ntp.org");
-  time_t now;
-  struct tm timeinfo;
-  time(&now);
-  localtime_r(&now, &timeinfo);
-
-  strftime(ymd, sizeof(ymd), "%Y-%m-%d", &timeinfo);
-  strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
-}
-
-void readth() {
+void readthsta() {
+	unsigned long now = millis();
+	if (now - lastpost >= interval) {
+		currentstate = httpost;
+		lastpost = now;
+		return;
+	}
+	
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("T:");
   lcd.print(readtemp());
   lcd.print((char)223);
   lcd.print("C");
-
   lcd.setCursor(0, 1);
   lcd.print("U:");
   lcd.print(readhumi());
   lcd.print("%");
+  delay(3000);
+}
+
+void errorsta() {
+  lcd.setCursor(0, 0);
+  lcd.print("Something went w");
+  lcd.setCursor(0, 1);
+  lcd.print("rong.");
+  delay(2000);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Returning to the");
+  lcd.setCursor(0, 1);
+  lcd.print("boot screen");
+  delay(2000);
+  lcd.clear();
+  currentstate = boot;
 }
