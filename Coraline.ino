@@ -1,5 +1,6 @@
 #include <DHT.h>
 #include <WiFi.h>
+#include <time.h> 
 #include <Keypad.h>
 #include <HTTPClient.h>
 #include <LiquidCrystal_I2C.h>
@@ -8,8 +9,8 @@ const int dhtpin = 4;
 const auto dhttype = DHT11;
 DHT dht(dhtpin, dhttype);
 
-const char* ssid = "Home";
-const char* pswd = "MN141201";
+const char* ssid = "iPhone de Thiago";
+const char* pswd = "nicoletti";
 const char* apikey = "Projeto1MC";
 const char* server = "http://tcc2025-473213.rj.r.appspot.com/api/leituras/";
 
@@ -62,7 +63,7 @@ char dmy[11];
 char hms[9];
 
 unsigned long lastpost = 0;
-unsigned long interval = 60000;
+unsigned long interval = 15000; // 15 segundos
 
 enum state : unsigned char { boot, wifi, httpost, readth, error };
 state currentstate = boot;
@@ -178,11 +179,11 @@ void timeconfig() {
     attempt++;
   }
   if (attempt > 10) {
-    strcpy(dmy, "00-00-0000");
+    strcpy(dmy, "0000-00-00");
     strcpy(hms, "00:00:00");
     return;
   } else {
-    strftime(dmy, sizeof(dmy), "%d-%m-%Y", &timeinfo);
+    strftime(dmy, sizeof(dmy), "%Y-%m-%d", &timeinfo);
     strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
   }
 }
@@ -209,7 +210,6 @@ void readthsta() {
 }
 
 void errorsta() {
-  WiFi.disconnect();
   lcd.setCursor(0, 0);
   lcd.print("Something went w");
   lcd.setCursor(0, 1);
