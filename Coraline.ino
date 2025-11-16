@@ -63,7 +63,7 @@ char dmy[11];
 char hms[9];
 
 unsigned long lastpost = 0;
-unsigned long interval = 30000;
+unsigned long interval = 30000; // 30 segundos
 
 enum state : unsigned char { boot, wifi, httpost, readth, error };
 state currentstate = boot;
