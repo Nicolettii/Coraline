@@ -147,7 +147,7 @@ void httpoststa() {
   http.addHeader("X-API-KEY", apikey);
 
   String postData =
-    "data=" + String(dmy) + "&time=" + String(hms) + "&totalSensors=" + String(totalSensors);
+    "data=" + String(ymd) + "&time=" + String(hms) + "&totalSensors=" + String(totalSensors);
 
   for (int i = 0; i < totalSensors; i++) {
     float reading = sensorslist[i].read();
@@ -179,11 +179,11 @@ void timeconfig() {
     attempt++;
   }
   if (attempt > 10) {
-    strcpy(dmy, "0000-00-00");
+    strcpy(ymd, "0000-00-00");
     strcpy(hms, "00:00:00");
     return;
   } else {
-    strftime(dmy, sizeof(dmy), "%Y-%m-%d", &timeinfo);
+    strftime(ymd, sizeof(ymd), "%Y-%m-%d", &timeinfo);
     strftime(hms, sizeof(hms), "%H:%M:%S", &timeinfo);
   }
 }
